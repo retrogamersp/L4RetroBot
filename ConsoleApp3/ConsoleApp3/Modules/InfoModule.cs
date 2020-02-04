@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Drawing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Discord;
@@ -8,6 +9,11 @@ using Discord.Commands;
 using Discord.WebSocket;
 using ConsoleApp3.Services;
 using ConsoleApp3;
+using Newtonsoft.Json;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using ConsoleApp3.Models;
 
 namespace ConsoleApp3.Modules
 {
@@ -32,7 +38,7 @@ namespace ConsoleApp3.Modules
     public class AvatarModule : ModuleBase<SocketCommandContext>
     {
         [Command("avatar")]
-        [Summary("Displays Bot Info")]
+        [Summary("Fetches Command Users Avatar")]
 
         public async Task Info()
         {
@@ -64,7 +70,7 @@ namespace ConsoleApp3.Modules
                 ImageUrl = AvatartoEmbed,
                 Footer = EmbedFoot,
                 Url = AvatartoEmbed,
-                Color = new Color(red, green, blue),
+                Color = new Discord.Color(red, green, blue),
 
             
                 
@@ -115,7 +121,7 @@ namespace ConsoleApp3.Modules
                 ImageUrl = AvatartoEmbed,
                 Footer = EmbedFoot,
                 Url = AvatartoEmbed,
-                Color = new Color(red, green, blue),
+                Color = new Discord.Color(red, green, blue),
 
 
 
@@ -179,7 +185,7 @@ namespace ConsoleApp3.Modules
                     .AddField("Reason:", reason)
                     .AddField("Punishment Length", "N/A - Kick")
                     .AddField("Punished By", E)
-                    .WithColor(new Color(255, 0, 0));
+                    .WithColor(new Discord.Color(255, 0, 0));
                 var embed = builder.Build();
                 await channel.SendMessageAsync(embed: embed);
                 await Discord.UserExtensions.SendMessageAsync(user, $"You were kicked from {Context.Guild.Name} for {reason}");
@@ -196,7 +202,7 @@ namespace ConsoleApp3.Modules
     }
     public class ReactionModule : ModuleBase<SocketCommandContext>
     {
-        [Command("rolesetup"), RequireUserPermission(GuildPermission.Administrator)]
+        [Command("reactionsetup"), RequireUserPermission(GuildPermission.Administrator)]
         [Summary("Sets up Role Picker")]
 
         public async Task Info()
@@ -205,15 +211,15 @@ namespace ConsoleApp3.Modules
             ulong ID = 672009794147581953;
             var channel = _client.GetChannel(ID) as IMessageChannel;
             Discord.IUser U = Context.Message.Author;
-            IEmote[] emotes = new IEmote[] {Emote.Parse("<:Unreal:672062790499827721>"), Emote.Parse("<:Unity:672063190535766026>"), Emote.Parse("<:3DSMax:672063870776508418>"), Emote.Parse("<:Blender:672063714572107786>") };
-            var EmbedAuth = new EmbedAuthorBuilder
+            IEmote[] emotes1 = new IEmote[] {Emote.Parse("<:Unreal:672062790499827721>"), Emote.Parse("<:Unity:672063190535766026>"), Emote.Parse("<:3DSMax:672063870776508418>"), Emote.Parse("<:Blender:672063714572107786>") };
+            var roleEmbedAuth = new EmbedAuthorBuilder
 
             {
                 Name = U.ToString(),
 
             };
 
-            var builder = new EmbedBuilder()
+            var rolebuilder = new EmbedBuilder()
                 .WithTitle("React to gain a role.")
                 .WithDescription($"Select a reaction to gain a role.\n\n{Emote.Parse("<:Unreal:672062790499827721>")} - Unreal Development\n\n <:Unity:672063190535766026> - Unity Development\n\n <:3DSMax:672063870776508418> - 3DSMax Modelling\n\n <:Blender:672063714572107786> - Blender Moddeling")
                 .WithUrl("https://discordapp.com")
@@ -222,18 +228,118 @@ namespace ConsoleApp3.Modules
                         .WithName("Role Giver")
                         .WithUrl("https://discordapp.com");
                 });
-            var embed = builder.Build();
-            var reactionmessage = await channel.SendMessageAsync(embed: embed);
-            await reactionmessage.AddReactionsAsync(emotes);
-            ReactionHandlingModule.messageid = Context.Message.Id;
-            Console.WriteLine(ReactionHandlingModule.messageid);
-            
+            var roleembed = rolebuilder.Build();
+            var rolemessage = await channel.SendMessageAsync(embed: roleembed);
+            await rolemessage.AddReactionsAsync(emotes1);
+            var emoji = new Emoji("\uD83C\uDFAB");
+            var ticketEmbedAuth = new EmbedAuthorBuilder
 
+            {
+                Name = U.ToString(),
+
+            };
+
+            var ticketbuilder = new EmbedBuilder()
+                .WithTitle("React to open a support ticket.")
+                .WithDescription($"React with {emoji} to open a support ticket")
+                .WithUrl("https://discordapp.com")
+                .WithAuthor(author => {
+                    author
+                        .WithName("Support Ticket Creator")
+                        .WithUrl("https://discordapp.com");
+                });
+            var ticketembed = ticketbuilder.Build();
+            var ticketmessage = await channel.SendMessageAsync(embed: ticketembed);
+            await ticketmessage.AddReactionAsync(emoji);
 
             await Context.Message.DeleteAsync();
         }
 
 
     }
+    public class CloseTicketModule : ModuleBase<SocketCommandContext>
+    {
+        [Command("closeticket")]
+        [Summary("Sets up Role Picker")]
+
+        public async Task Info()
+        {
+            var _client = Context.Client;
+            ulong ID = 672390262877716480;
+            var channel = _client.GetChannel(ID) as IMessageChannel;
+            var emoji = new Emoji("\u274C");
+            Discord.IUser U = Context.Message.Author;
+            if ((Context.Channel as SocketTextChannel).CategoryId == 672377248065781760)
+            {
+                await channel.SendMessageAsync($"{emoji} - {Context.Message.Author} has closed the Support Ticket for {Context.Channel.Name}");
+                await (Context.Channel as SocketTextChannel).DeleteAsync();
+            }
+            else
+                await Context.Message.DeleteAsync();
+        }
+
+
+    }
+    public class BotAvatarModule : ModuleBase<SocketCommandContext>
+    {
+        [Command("botavatar"), RequireUserPermission(GuildPermission.Administrator)]
+        [Summary("Sets the bots avatar")]
+
+        public async Task Info(string url)
+        {
+            {
+                using (System.Net.WebClient webClient = new System.Net.WebClient())
+                {
+                    using (Stream stream = webClient.OpenRead(url))
+                    {
+                        var image = new Discord.Image(stream);
+                        await Context.Client.CurrentUser.ModifyAsync(u => u.Avatar = image);
+                    }
+                }
+            }
+        }
+
+
+    }
+    public class OWStatsModule : ModuleBase<SocketCommandContext>
+    {
+        [Command("OWStats")]
+        [Summary("Sets the bots avatar")]
+
+        public async Task Info(string platform = null, string region = null, string battletag = null, string hero = null)
+        {
+            if (platform == null || region == null || battletag == null)
+            {
+                await Context.Channel.SendMessageAsync("Command Missing required parameters, correct usage is !owstats (platform) (region) (battletag) <hero>");
+            }
+            else
+            {
+                string battletagformatted = battletag.Replace("#", "-");
+                if (hero == null)
+                {
+                    owstatsmodel stats = null;
+                    string URL = $"https://ow-api.com/v1/stats/{platform}/{region}/{battletagformatted}/profile";
+                    HttpClient client = new HttpClient();
+                    HttpResponseMessage response = await client.GetAsync(URL);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        stats = await response.Content.ReadAsAsync<owstatsmodel>();
+                    }
+                    else
+                    {
+
+                        Console.WriteLine(response);
+                        Console.WriteLine(URL);
+                    }
+                }
+            }
+        }
+            
+
+    }
+
 
 }
+
+
+

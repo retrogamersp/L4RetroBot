@@ -7,6 +7,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using ConsoleApp3.Services;
+using System.Drawing;
 
 
 namespace ConsoleApp3
@@ -15,8 +16,6 @@ namespace ConsoleApp3
     {
         static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
-        public void HookReactionAdded(BaseSocketClient client)
-            => client.ReactionAdded += HandleReactionAddedAsync;
 
         private DiscordSocketClient _client;
         private IConfiguration _config;
@@ -67,18 +66,9 @@ namespace ConsoleApp3
         private IConfiguration BuildConfig()
         {
             return new ConfigurationBuilder()
-                .SetBasePath(@"C:\Users\51464\source\repos\ConsoleApp3\ConsoleApp3")
+                .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("config.json")
                 .Build();
-        }
-        public async Task HandleReactionAddedAsync(Cacheable<IUserMessage, ulong> cachedMessage, ISocketMessageChannel originChannel, SocketReaction reaction)
-        {
-            var message = await cachedMessage.GetOrDownloadAsync();
-            if (message != null && reaction.User.IsSpecified)
-                Console.WriteLine($"{reaction.User.Value} just added a reaction '{reaction.Emote}' " +
-                                  $"to {message.Author}'s message ({message.Id}).");
-            else
-                Console.WriteLine("Test");
         }
     }
 }

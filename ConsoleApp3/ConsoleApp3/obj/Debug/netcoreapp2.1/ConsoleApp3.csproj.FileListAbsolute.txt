@@ -9,3 +9,4 @@ C:\Users\51464\source\repos\ConsoleApp3\ConsoleApp3\obj\Debug\netcoreapp2.1\Cons
 C:\Users\51464\source\repos\ConsoleApp3\ConsoleApp3\obj\Debug\netcoreapp2.1\ConsoleApp3.AssemblyInfo.cs
 C:\Users\51464\source\repos\ConsoleApp3\ConsoleApp3\obj\Debug\netcoreapp2.1\ConsoleApp3.dll
 C:\Users\51464\source\repos\ConsoleApp3\ConsoleApp3\obj\Debug\netcoreapp2.1\ConsoleApp3.pdb
+C:\Users\51464\source\repos\ConsoleApp3\ConsoleApp3\bin\Debug\netcoreapp2.1\ConsoleApp3.dll.config
